@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme/app_colors.dart';
 import '../models/subscription_model.dart';
 
 
@@ -64,14 +63,14 @@ class SubscriptionUIHelper {
   }) {
     if (isAutoPay) {
       if (daysUntilDue == 0 || daysUntilDue == 1) return Colors.amber;
-      return AppColors.cobaltBlue;
+      return isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280);
     }
     if (isOverdue || daysUntilDue < 0) {
       return Colors.redAccent;
     }
     if (daysUntilDue == 0) return Colors.amber;
     if (isUpcoming) return Colors.amber;
-    return AppColors.cobaltBlue;
+    return isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280);
   }
 
   static String getDueStatus({

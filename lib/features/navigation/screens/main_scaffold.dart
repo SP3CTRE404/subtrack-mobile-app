@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:subtrack/features/subscriptions/screens/payment_history_screen.dart';
 import 'package:subtrack/features/subscriptions/models/user_role.dart';
 import 'package:subtrack/features/subscriptions/providers/user_role_provider.dart';
 
@@ -19,7 +18,7 @@ import '../../../core/notifications/providers/notification_check_provider.dart';
 
 class NavigationIndexNotifier extends Notifier<int> {
   @override
-  int build() => 2;
+  int build() => 0;
 
   void setIndex(int index) => state = index;
 }
@@ -36,10 +35,21 @@ class MainScaffold extends ConsumerStatefulWidget {
 }
 
 class _MainScaffoldState extends ConsumerState<MainScaffold> {
-  bool _isPill = true;
-  bool _isAtBottom = false;
   bool _isScrolled = false;
-  int _previousIndex = 0;
+  late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialIndex = ref.read(navigationIndexProvider);
+    _pageController = PageController(initialPage: initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   bool _handleScrollNotification(ScrollNotification notification) {
     if (notification is ScrollUpdateNotification &&
@@ -48,24 +58,6 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       final scrolled = metrics.pixels > 10;
       if (scrolled != _isScrolled) {
         setState(() => _isScrolled = scrolled);
-      }
-
-      final atBottom = metrics.pixels >= metrics.maxScrollExtent - 1;
-      if (atBottom && !_isAtBottom) {
-        setState(() {
-          _isAtBottom = true;
-          _isPill = false;
-        });
-      } else if (!atBottom && _isAtBottom) {
-        setState(() {
-          _isAtBottom = false;
-          _isPill = true;
-        });
-      }
-
-      if (!atBottom && notification.scrollDelta != null) {
-        final scrollingUp = notification.scrollDelta! < 0;
-        if (scrollingUp && !_isPill) setState(() => _isPill = true);
       }
     }
     return false;
@@ -79,17 +71,21 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     final isSingle = userRole == UserRole.single;
 
     // Fix #2: Only select the fields we actually need for the minor check
-    final isMinorWithoutHousehold = ref.watch(userProvider.select((asyncUser) {
-      final user = asyncUser.value;
-      if (user == null) return false;
-      return user.dateOfBirth != null &&
-             user.age >= 0 &&
-             user.age < 18 &&
-             user.householdId == null;
-    }));
+    final isMinorWithoutHousehold = ref.watch(
+      userProvider.select((asyncUser) {
+        final user = asyncUser.value;
+        if (user == null) return false;
+        return user.dateOfBirth != null &&
+            user.age >= 0 &&
+            user.age < 18 &&
+            user.householdId == null;
+      }),
+    );
     final isLoading = ref.watch(userProvider.select((u) => u.isLoading));
     final hasError = ref.watch(userProvider.select((u) => u.hasError));
-    final errorMessage = ref.watch(userProvider.select((u) => u.error?.toString() ?? ''));
+    final errorMessage = ref.watch(
+      userProvider.select((u) => u.error?.toString() ?? ''),
+    );
 
     if (isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -101,64 +97,63 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     if (isMinorWithoutHousehold) {
       return const Scaffold(
         extendBodyBehindAppBar: true,
-        appBar: CustomAppBar(
-          title: 'Join a Household',
-          isScrolled: false,
-        ),
+        appBar: CustomAppBar(title: 'Join a Household', isScrolled: false),
         body: JoinHouseholdScreen(),
       );
     }
 
     final List<Widget> screens = [
-      const HouseholdScreen(),
-      const SubscriptionDetailScreen(),
       const DashboardScreen(),
-      const PaymentHistoryScreen(),
+      const SubscriptionDetailScreen(),
+      const HouseholdScreen(),
       const AccountScreen(),
     ];
 
     final List<String> titles = [
-      isSingle ? 'Collaborate' : 'Household',
-      'Ongoing Subscriptions',
       'Premio',
-      'History',
+      'Subscriptions',
+      isSingle ? 'Collaborate' : 'Household',
       'Account',
     ];
 
     ref.listen(navigationIndexProvider, (previous, next) {
-      if (previous != null) {
-        _previousIndex = previous;
-      }
       setState(() {
         _isScrolled = false;
-        _isPill = true;
-        _isAtBottom = false;
       });
+      if (_pageController.hasClients) {
+        final currentPage = _pageController.page?.round() ?? _pageController.initialPage;
+        if (currentPage != next) {
+          _pageController.animateToPage(
+            next,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+          );
+        }
+      }
     });
 
     ref.listen(tutorialProvider, (previous, next) {
       if (previous == null || previous.value == null) return;
-      
+
       final prevStep = previous.value?.activeStep;
       final activeStep = next.value?.activeStep;
       if (prevStep == activeStep) return;
 
       if (activeStep == 'dashboard_hello') {
-        ref.read(navigationIndexProvider.notifier).setIndex(2);
-      } else if (activeStep == 'bottom_nav_household') {
         ref.read(navigationIndexProvider.notifier).setIndex(0);
+      } else if (activeStep == 'bottom_nav_household') {
+        ref.read(navigationIndexProvider.notifier).setIndex(2);
       } else if (activeStep == 'bottom_nav_subscriptions') {
         ref.read(navigationIndexProvider.notifier).setIndex(1);
-      } else if (activeStep == 'bottom_nav_history') {
-        ref.read(navigationIndexProvider.notifier).setIndex(3);
       } else if (activeStep == 'bottom_nav_account') {
-        ref.read(navigationIndexProvider.notifier).setIndex(4);
+        ref.read(navigationIndexProvider.notifier).setIndex(3);
       }
     });
 
     return Scaffold(
       extendBody: true,
       extendBodyBehindAppBar: true,
+      resizeToAvoidBottomInset: true,
       appBar: CustomAppBar(
         isScrolled: _isScrolled,
         title: titles[currentIndex],
@@ -177,38 +172,42 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
               )
             : null,
       ),
-      body: NotificationListener<ScrollNotification>(
-        onNotification: _handleScrollNotification,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 600),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
-          transitionBuilder: (child, animation) {
-            final childIndex = (child.key as ValueKey<int>).value;
-            final isForward = currentIndex >= _previousIndex;
-            
-            Offset beginOffset;
-            if (childIndex == currentIndex) {
-              beginOffset = Offset(isForward ? 1.0 : -1.0, 0.0);
-            } else {
-              beginOffset = Offset(isForward ? -1.0 : 1.0, 0.0);
-            }
-
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: beginOffset,
-                end: Offset.zero,
-              ).animate(animation),
-              child: child,
-            );
-          },
-          child: SizedBox.expand(
-            key: ValueKey<int>(currentIndex),
-            child: screens[currentIndex],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment.center,
+            radius: 1.3,
+            colors: Theme.of(context).brightness == Brightness.dark
+                ? const [
+                    Color.fromARGB(255, 4, 42, 53), // Very subtle premium green glow
+                    Color(0xFF000000), // Pure black background
+                  ]
+                : const [
+                    Color.fromARGB(255, 137, 208, 230), // Subtle soft green/mint glow for light mode
+                    Color(0xFFF4F6F8), // Crisp light surface background
+                  ],
+            stops: const [0.0, 0.8],
+          ),
+        ),
+        child: NotificationListener<ScrollNotification>(
+          onNotification: _handleScrollNotification,
+          child: PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              ref.read(navigationIndexProvider.notifier).setIndex(index);
+            },
+            children: screens.asMap().entries.map((entry) {
+              return SizedBox.expand(
+                key: ValueKey<int>(entry.key),
+                child: entry.value,
+              );
+            }).toList(),
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavBar(isPill: _isPill),
+      bottomNavigationBar: MediaQuery.of(context).viewInsets.bottom > 0
+          ? null
+          : const BottomNavBar(isPill: true),
     );
   }
 }

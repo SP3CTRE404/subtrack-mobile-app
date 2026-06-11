@@ -8,7 +8,6 @@ const List<String> kTutorialSteps = [
   'dashboard_action_needed',
   'bottom_nav_household',
   'bottom_nav_subscriptions',
-  'bottom_nav_history',
   'bottom_nav_account',
 ];
 

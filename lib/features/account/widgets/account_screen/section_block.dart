@@ -26,7 +26,7 @@ class SectionBlock extends StatelessWidget {
         ),
         ClipRRect(
           borderRadius: BorderRadius.circular(20),
-          child: ColoredBox(
+          child: Material(
             color: theme.colorScheme.surfaceContainerHighest,
             child: child,
           ),

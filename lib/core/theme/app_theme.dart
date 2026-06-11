@@ -65,7 +65,7 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.trueBlack,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.cobaltBlue,
-        surface: Color.fromARGB(251, 19, 19, 19),
+        surface: AppColors.darkSurface,
         onSurface: Colors.white,
       ),
       appBarTheme: const AppBarTheme(
@@ -90,7 +90,7 @@ class AppTheme {
         foregroundColor: Colors.black,
       ),
       cardTheme: const CardThemeData(
-        color: Color.fromARGB(250, 24, 24, 24),
+        color: AppColors.darkSurface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16)),

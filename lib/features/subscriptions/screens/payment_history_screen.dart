@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:subtrack/features/account/providers/account_provider.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../settings/providers/currency_provider.dart';
@@ -10,73 +11,156 @@ import '../providers/history_provider.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/user_role_provider.dart';
 import '../models/user_role.dart';
-import '../../account/providers/account_provider.dart';
 import '../utils/subscription_ui_helper.dart';
-import '../widgets/history/payment_history_list_view.dart';
 import '../widgets/history/subscription_history_bubble.dart';
-import '../../tutorial/widgets/tutorial_anchor.dart';
-import '../../tutorial/widgets/tutorial_bubble.dart';
 
 class PaymentHistoryScreen extends ConsumerStatefulWidget {
   final int? memberId;
   final String? memberName;
 
-  const PaymentHistoryScreen({
-    super.key,
-    this.memberId,
-    this.memberName,
-  });
+  const PaymentHistoryScreen({super.key, this.memberId, this.memberName});
 
   @override
-  ConsumerState<PaymentHistoryScreen> createState() => _PaymentHistoryScreenState();
+  ConsumerState<PaymentHistoryScreen> createState() =>
+      _PaymentHistoryScreenState();
 }
 
 class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final currencySymbol = ref.watch(nativeCurrencyProvider);
+    final theme = Theme.of(context);
 
     // If viewing a specific member's history (Admin View - Pushed Screen)
     if (widget.memberId != null) {
-      final historyAsync = ref.watch(memberHistoryProvider(widget.memberId!));
-      
+      final activeAsync = ref.watch(subscriptionProvider);
+      final expiredAsync = ref.watch(
+        memberExpiredSubscriptionsProvider(widget.memberId!),
+      );
+
       return Scaffold(
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
-          title: Text('${widget.memberName}\'s History'),
-          centerTitle: true,
+          title: Text('${widget.memberName}\'s History', style: const TextStyle(fontWeight: FontWeight.bold)),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
         ),
-        body: historyAsync.when(
-          data: (historyList) {
-            final sortedList = List.of(historyList)
-              ..sort((a, b) => b.paymentDate.compareTo(a.paymentDate));
-            return PaymentHistoryListView(
-              historyItems: sortedList,
-              currencySymbol: currencySymbol,
-              tabPrefix: 'history_member_${widget.memberId}',
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Error loading history: $err')),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.center,
+              radius: 1.3,
+              colors: theme.brightness == Brightness.dark
+                  ? const [
+                      Color.fromARGB(255, 4, 42, 53),
+                      Color(0xFF000000),
+                    ]
+                  : const [
+                      Color.fromARGB(255, 137, 208, 230),
+                      Color(0xFFF4F6F8),
+                    ],
+              stops: const [0.0, 0.8],
+            ),
+          ),
+          child: activeAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Center(child: Text('Error: $err')),
+            data: (activeList) {
+              return expiredAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(child: Text('Error: $err')),
+                data: (expiredList) {
+                  final memberActive = activeList
+                      .where((s) => s.ownerId == widget.memberId)
+                      .toList();
+                  final allItems = [...memberActive, ...expiredList];
+
+                  if (allItems.isEmpty) {
+                    return const Center(child: Text('No subscriptions found.'));
+                  }
+
+                  // Sort by name
+                  allItems.sort(
+                    (a, b) => a.serviceName.toLowerCase().compareTo(
+                      b.serviceName.toLowerCase(),
+                    ),
+                  );
+
+                  final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+
+                  return ListView.separated(
+                    padding: EdgeInsets.fromLTRB(16, topPadding + 16, 16, 40),
+                    itemCount: allItems.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final sub = allItems[index];
+                      return _SubscriptionHistoryListItem(
+                        subscription: sub,
+                        currencySymbol: currencySymbol,
+                        onTap: () => _showHistoryBubble(sub, currencySymbol),
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
         ),
       );
     }
 
-    // Personal View (Tab View)
+    // Personal View (Pushed Screen)
     final activeAsync = ref.watch(subscriptionProvider);
     final expiredAsync = ref.watch(expiredSubscriptionsProvider);
     final userAsync = ref.watch(userProvider);
     final userRole = ref.watch(userRoleProvider);
-    
-    // Account for the MainScaffold's transparent AppBar
-    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight - 40;
 
-    return _buildSubscriptionList(
-      activeAsync: activeAsync,
-      expiredAsync: expiredAsync,
-      currencySymbol: currencySymbol,
-      topPadding: topPadding,
-      userRole: userRole,
-      currentUserId: userAsync.value?.id,
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: const Text('Payment History', style: TextStyle(fontWeight: FontWeight.bold)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment.center,
+            radius: 1.3,
+            colors: theme.brightness == Brightness.dark
+                ? const [
+                    Color.fromARGB(255, 4, 42, 53),
+                    Color(0xFF000000),
+                  ]
+                : const [
+                    Color.fromARGB(255, 137, 208, 230),
+                    Color(0xFFF4F6F8),
+                  ],
+            stops: const [0.0, 0.8],
+          ),
+        ),
+        child: _buildSubscriptionList(
+          activeAsync: activeAsync,
+          expiredAsync: expiredAsync,
+          currencySymbol: currencySymbol,
+          topPadding: MediaQuery.of(context).padding.top + kToolbarHeight,
+          userRole: userRole,
+          currentUserId: userAsync.value?.id,
+        ),
+      ),
     );
   }
 
@@ -94,7 +178,7 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
 
     final activeItems = activeAsync.value ?? [];
     final expiredItems = expiredAsync.value ?? [];
-    
+
     final viewableActive = userRole == UserRole.admin
         ? activeItems
         : activeItems.where((s) => s.ownerId == currentUserId).toList();
@@ -105,41 +189,28 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
       return Center(
         child: Padding(
           padding: EdgeInsets.only(top: topPadding),
-          child: const TutorialAnchor(
-            tutorialId: 'bottom_nav_history',
-            title: 'Payment History',
-            description: 'This is where your payment logs are tracked. Tap on any subscription to view transaction details.',
-            arrowDirection: ArrowDirection.up,
-            child: Text('No subscriptions found.'),
-          ),
+          child: const Text('No subscriptions found.'),
         ),
       );
     }
 
     // Sort by name
-    allItems.sort((a, b) => a.serviceName.toLowerCase().compareTo(b.serviceName.toLowerCase()));
+    allItems.sort(
+      (a, b) =>
+          a.serviceName.toLowerCase().compareTo(b.serviceName.toLowerCase()),
+    );
 
     return ListView.separated(
-      padding: EdgeInsets.fromLTRB(16, topPadding + 16, 16, 120),
+      padding: EdgeInsets.fromLTRB(16, topPadding + 16, 16, 40),
       itemCount: allItems.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final sub = allItems[index];
-        final item = _SubscriptionHistoryListItem(
+        return _SubscriptionHistoryListItem(
           subscription: sub,
           currencySymbol: currencySymbol,
           onTap: () => _showHistoryBubble(sub, currencySymbol),
         );
-        if (index == 0) {
-          return TutorialAnchor(
-            tutorialId: 'bottom_nav_history',
-            title: 'Payment History',
-            description: 'This is your payment logs list. Tap any subscription in this history list to inspect its details and billing logs.',
-            arrowDirection: ArrowDirection.up,
-            child: item,
-          );
-        }
-        return item;
       },
     );
   }
@@ -180,11 +251,13 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                     alignment: Alignment.center,
                     transform: Matrix4.identity()
                       ..setEntry(3, 2, 0.001)
-                      ..multiply(Matrix4.diagonal3Values(
-                        0.9 + (0.1 * t), 
-                        0.9 + (0.1 * t), 
-                        1.0,
-                      ))
+                      ..multiply(
+                        Matrix4.diagonal3Values(
+                          0.9 + (0.1 * t),
+                          0.9 + (0.1 * t),
+                          1.0,
+                        ),
+                      )
                       ..rotateX(tilt),
                     child: child!,
                   ),
@@ -264,7 +337,10 @@ class _SubscriptionHistoryListItem extends StatelessWidget {
                       if (isExpired)
                         Container(
                           margin: const EdgeInsets.only(top: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.grey.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),

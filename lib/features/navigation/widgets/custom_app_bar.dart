@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../settings/screens/settings_screen.dart';
+import '../../subscriptions/screens/payment_history_screen.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isScrolled;
@@ -17,9 +18,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final surfaceColor = colorScheme.surface;
-    final onSurfaceColor = colorScheme.onSurface;
 
     return AppBar(
       backgroundColor: Colors.transparent,
@@ -34,11 +32,19 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             decoration: BoxDecoration(
-              color: surfaceColor.withValues(alpha: isScrolled ? 0.75 : 0.0),
+              color: isScrolled
+                  ? (theme.brightness == Brightness.dark
+                        ? Colors.black.withValues(alpha: 0.3)
+                        : Colors.white.withValues(alpha: 0.72))
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(32),
               border: Border.all(
-                color: onSurfaceColor.withValues(alpha: isScrolled ? 0.1 : 0.0),
-                width: 1,
+                color: isScrolled
+                    ? (theme.brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.12)
+                          : Colors.white.withValues(alpha: 0.7))
+                    : Colors.transparent,
+                width: 1.2,
               ),
             ),
             child: AnimatedSwitcher(
@@ -58,13 +64,56 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               child: Text(
                 title,
                 key: ValueKey<String>(title),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                ),
               ),
             ),
           ),
         ),
       ),
       actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  color: isScrolled
+                      ? (theme.brightness == Brightness.dark
+                            ? Colors.black.withValues(alpha: 0.3)
+                            : Colors.white.withValues(alpha: 0.72))
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isScrolled
+                        ? (theme.brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.12)
+                              : Colors.white.withValues(alpha: 0.7))
+                        : Colors.transparent,
+                    width: 1.2,
+                  ),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.history_rounded),
+                  tooltip: 'History',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PaymentHistoryScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 16.0),
           child: ClipRRect(
@@ -74,14 +123,23 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
-                  color: surfaceColor.withValues(alpha: isScrolled ? 0.75 : 0.0),
+                  color: isScrolled
+                      ? (theme.brightness == Brightness.dark
+                            ? Colors.black.withValues(alpha: 0.3)
+                            : Colors.white.withValues(alpha: 0.72))
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: onSurfaceColor.withValues(alpha: isScrolled ? 0.1 : 0.0),
-                    width: 1,
+                    color: isScrolled
+                        ? (theme.brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.12)
+                              : Colors.white.withValues(alpha: 0.7))
+                        : Colors.transparent,
+                    width: 1.2,
                   ),
                 ),
-                child: trailingAction ??
+                child:
+                    trailingAction ??
                     IconButton(
                       icon: const Icon(Icons.settings_outlined),
                       tooltip: 'Settings',

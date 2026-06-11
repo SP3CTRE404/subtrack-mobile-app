@@ -29,13 +29,12 @@ class NavItem extends ConsumerWidget {
     final isSelected = currentIndex == index;
     final theme = Theme.of(context);
 
-    // If prominent and selected, use primary color. Otherwise, use a subtle dark grey pill for selection.
     final backgroundColor = isSelected
-        ? (isProminent ? const Color(0xFF003366) : theme.colorScheme.onSurface.withValues(alpha: 0.15))
-        : (isProminent ? theme.primaryColor.withValues(alpha: 0.05) : const Color.fromARGB(0, 0, 0, 0));
+        ? theme.colorScheme.onSurface.withValues(alpha: 0.15)
+        : const Color.fromARGB(0, 0, 0, 0);
 
     final contentColor = isSelected
-        ? (isProminent ? Colors.white : theme.colorScheme.onSurface)
+        ? theme.colorScheme.onSurface
         : theme.bottomNavigationBarTheme.unselectedItemColor ?? Colors.grey;
 
     return GestureDetector(
@@ -55,15 +54,6 @@ class NavItem extends ConsumerWidget {
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(isPill ? 28 : 12),
-            boxShadow: isProminent && isSelected
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFF00BFFF).withValues(alpha: 0.25),
-                      blurRadius: 15,
-                      offset: const Offset(0, 0),
-                    ),
-                  ]
-                : [],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -85,7 +75,7 @@ class NavItem extends ConsumerWidget {
                   child: SizedBox(
                     width: isSelected ? null : 0,
                     child: Padding(
-                      padding: EdgeInsets.only(left: isSelected ? 8.0 : 0),
+                      padding: EdgeInsets.only(left: isSelected ? 6.0 : 0),
                       child: Text(
                         label,
                         maxLines: 1,
@@ -93,7 +83,7 @@ class NavItem extends ConsumerWidget {
                         style: TextStyle(
                           color: contentColor,
                           fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                          fontSize: 11,
                         ),
                       ),
                     ),

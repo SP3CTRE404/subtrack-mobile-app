@@ -275,15 +275,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final theme = Theme.of(context);
     final isPersonal = _viewMode == DashboardViewMode.personal;
     
-    // Fluid width adjustment for premium responsiveness
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final toggleWidth = (screenWidth * 0.55).clamp(160.0, 220.0);
-
     return Container(
-      width: toggleWidth,
-      height: 48,
+      width: 160,
+      height: 38,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(19),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -293,13 +289,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(19),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
           child: Container(
             decoration: BoxDecoration(
               color: theme.colorScheme.surface.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(19),
               border: Border.all(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
                 width: 0.5,
@@ -334,7 +330,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   child: FractionallySizedBox(
                     widthFactor: 0.5,
                     child: Padding(
-                      padding: const EdgeInsets.all(4.0),
+                      padding: const EdgeInsets.all(3.0),
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -345,7 +341,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               theme.colorScheme.primary.withValues(alpha: 0.8),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
                               color: theme.colorScheme.primary.withValues(alpha: 0.3),
@@ -416,7 +412,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ? Colors.white
                   : theme.colorScheme.onSurface.withValues(alpha: 0.4),
               fontWeight: FontWeight.bold,
-              fontSize: 14,
+              fontSize: 11,
               letterSpacing: -0.2,
             ),
             child: Text(label),

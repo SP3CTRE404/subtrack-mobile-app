@@ -1,5 +1,5 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
 
 class SubscriptionFabSmall extends StatelessWidget {
   const SubscriptionFabSmall({
@@ -19,7 +19,17 @@ class SubscriptionFabSmall extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Define the interactive button part with an expanded hit area (60x60)
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final glassBg = isDark
+        ? Colors.black.withValues(alpha: 0.4)
+        : Colors.white.withValues(alpha: 0.72);
+    final glassBorder = isDark
+        ? Colors.white.withValues(alpha: 0.15)
+        : Colors.white.withValues(alpha: 0.85);
+
+    // Define the interactive button part with an expanded hit area (52x52)
     final buttonWithHitArea = Stack(
       alignment: Alignment.center,
       children: [
@@ -27,15 +37,47 @@ class SubscriptionFabSmall extends StatelessWidget {
         GestureDetector(
           onTap: onTap,
           behavior: HitTestBehavior.opaque,
-          child: const SizedBox(width: 60, height: 60),
+          child: const SizedBox(width: 52, height: 52),
         ),
-        // Visual Small FAB
-        FloatingActionButton.small(
-          heroTag: 'small_fab_$label',
-          onPressed: onTap,
-          backgroundColor: AppColors.cobaltBlue.withValues(alpha: 0.9),
-          shape: const CircleBorder(),
-          child: Icon(icon, color: Colors.white),
+        // Visual Small FAB (Liquid Glass)
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: glassBg,
+                    border: Border.all(
+                      color: glassBorder,
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      icon,
+                      color: theme.colorScheme.onSurface,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ],
     );

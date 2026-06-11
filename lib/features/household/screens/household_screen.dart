@@ -247,7 +247,7 @@ class HouseholdScreen extends ConsumerWidget {
                 await ref.read(householdProvider.notifier).leave();
                 if (context.mounted) {
                   // Switch to Dashboard tab
-                  ref.read(navigationIndexProvider.notifier).setIndex(2);
+                  ref.read(navigationIndexProvider.notifier).setIndex(0);
                   
                   CustomToast.show(
                     context: context,
@@ -328,7 +328,7 @@ class HouseholdScreen extends ConsumerWidget {
 
             if (context.mounted) {
               // Switch to Dashboard tab
-              ref.read(navigationIndexProvider.notifier).setIndex(2);
+              ref.read(navigationIndexProvider.notifier).setIndex(0);
               
               CustomToast.show(
                 context: context,

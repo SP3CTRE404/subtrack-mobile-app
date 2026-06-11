@@ -17,19 +17,17 @@ class BottomNavBar extends ConsumerWidget {
     final isSingle = userRole == UserRole.single;
 
     final radius = isPill ? BorderRadius.circular(42) : BorderRadius.zero;
-    final baseColor =
-        theme.bottomNavigationBarTheme.backgroundColor ?? Colors.black;
 
     final double bottomPadding = MediaQuery.of(context).padding.bottom;
 
     // Exact height of the widget container (no bottomPadding for pill)
-    final double widgetHeight = isPill ? 104.0 : 60.0 + bottomPadding;
+    final double widgetHeight = isPill ? 88.0 : 60.0 + bottomPadding;
 
     // Total height of the blurred background region
-    final double blurHeight = isPill ? 84.0 : 60.0 + bottomPadding;
+    final double blurHeight = isPill ? 76.0 : 60.0 + bottomPadding;
 
     // Start Y coordinate of the blurred background region
-    final double blurStartY = isPill ? 20.0 : 0.0;
+    final double blurStartY = isPill ? 12.0 : 0.0;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 260),
@@ -96,9 +94,9 @@ class BottomNavBar extends ConsumerWidget {
               duration: const Duration(milliseconds: 260),
               curve: Curves.easeOutCubic,
               margin: isPill
-                  ? const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0)
+                  ? const EdgeInsets.only(left: 44.0, right: 44.0, top: 6.0, bottom: 26.0)
                   : EdgeInsets.zero,
-              height: isPill ? 64 : 60 + bottomPadding,
+              height: isPill ? 56 : 60 + bottomPadding,
               decoration: BoxDecoration(
                 borderRadius: radius,
                 boxShadow: isPill
@@ -117,18 +115,26 @@ class BottomNavBar extends ConsumerWidget {
                   filter: ImageFilter.blur(sigmaX: 18.0, sigmaY: 18.0),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isPill ? baseColor.withValues(alpha: 0.75) : baseColor.withValues(alpha: 0.65),
+                      color: isPill
+                          ? (Theme.of(context).brightness == Brightness.dark
+                              ? Colors.black.withValues(alpha: 0.3)
+                              : Colors.white.withValues(alpha: 0.72))
+                          : (Theme.of(context).brightness == Brightness.dark
+                              ? Colors.black.withValues(alpha: 0.2)
+                              : Colors.white.withValues(alpha: 0.65)),
                       borderRadius: radius,
                       border: Border.all(
-                        color: isPill
-                            ? theme.colorScheme.onSurface.withValues(alpha: 0.08)
-                            : Colors.white.withValues(alpha: 0.12),
-                        width: isPill ? 1.0 : 0.8,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white.withValues(alpha: 0.12)
+                            : (isPill
+                                ? Colors.white.withValues(alpha: 0.7)
+                                : Colors.white.withValues(alpha: 0.4)),
+                        width: 1.2,
                       ),
                     ),
                     child: Padding(
                       padding: isPill
-                          ? const EdgeInsets.all(12.0)
+                          ? const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0)
                           : EdgeInsets.fromLTRB(
                               16.0,
                               0,
@@ -139,14 +145,11 @@ class BottomNavBar extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           NavItem(
-                            outlinedIcon: isSingle
-                                ? Icons.add_home_work_outlined
-                                : Icons.home_outlined,
-                            filledIcon: isSingle
-                                ? Icons.add_home_work_rounded
-                                : Icons.home_rounded,
-                            label: 'Household',
+                            outlinedIcon: Icons.grid_view_outlined,
+                            filledIcon: Icons.grid_view_rounded,
+                            label: 'Dashboard',
                             index: 0,
+                            isProminent: true,
                             isPill: isPill,
                           ),
                           NavItem(
@@ -157,25 +160,21 @@ class BottomNavBar extends ConsumerWidget {
                             isPill: isPill,
                           ),
                           NavItem(
-                            outlinedIcon: Icons.grid_view_outlined,
-                            filledIcon: Icons.grid_view_rounded,
-                            label: 'Dashboard',
+                            outlinedIcon: isSingle
+                                ? Icons.group_add_outlined
+                                : Icons.groups_outlined,
+                            filledIcon: isSingle
+                                ? Icons.group_add_rounded
+                                : Icons.groups_rounded,
+                            label: 'Household',
                             index: 2,
-                            isProminent: true,
-                            isPill: isPill,
-                          ),
-                          NavItem(
-                            outlinedIcon: Icons.history_rounded,
-                            filledIcon: Icons.history_rounded,
-                            label: 'History',
-                            index: 3,
                             isPill: isPill,
                           ),
                           NavItem(
                             outlinedIcon: Icons.person_outline_rounded,
                             filledIcon: Icons.person_rounded,
                             label: 'Account',
-                            index: 4,
+                            index: 3,
                             isPill: isPill,
                           ),
                         ],

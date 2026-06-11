@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Vibrant, futuristic Electric Blue / Neon Blue
-  static const Color cobaltBlue = Color.fromARGB(255, 0, 170, 255);
+  // Vibrant, futuristic Neon Teal/Mint (from the cool image)
+  static const Color cobaltBlue = Color.fromARGB(255, 17, 136, 227);
 
   // Dark Mode Colors
-  static const Color trueBlack = Color.fromARGB(155, 0, 24, 46);
-  static const Color darkSurface = Color.fromARGB(250, 11, 11, 12); // Slightly elevated from black
+  static const Color trueBlack = Color.fromARGB(255, 17, 17, 17);
+  static const Color darkSurface = Color(0xFF16171B); // Slightly elevated premium dark grey
 
   // Light Mode Colors
   static const Color pureWhite = Color.fromARGB(255, 255, 255, 255); // True white for max contrast

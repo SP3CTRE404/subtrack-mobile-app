@@ -62,7 +62,7 @@ class SubscriptionHistoryBubble extends ConsumerWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(32),
                   child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                    filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                     child: SingleChildScrollView(
                       child: historyAsync.when(
                         data: (history) {

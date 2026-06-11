@@ -1,9 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:subtrack/features/account/providers/account_provider.dart';
 import '../models/history_model.dart';
 import '../models/subscription_model.dart';
 import '../services/history_repository.dart';
 import '../services/subscription_repository.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../household/providers/household_provider.dart';
+import 'subscription_provider.dart';
 
 /// Fetches payment history for a specific subscription ID.
 final historyProvider = FutureProvider.autoDispose.family<List<SubscriptionHistory>, int>(
@@ -26,7 +29,57 @@ final historyProvider = FutureProvider.autoDispose.family<List<SubscriptionHisto
       return await repo.getHistory(subscriptionId).timeout(const Duration(seconds: 10));
     } catch (e) {
       try {
-        final allHistory = await repo.getUserHistory(page: 0, size: 100);
+        // Look up the subscription to find the correct ownerId
+        int? ownerId;
+        final activeSubs = ref.read(subscriptionProvider).value;
+        if (activeSubs != null) {
+          final match = activeSubs.where((s) => s.id == subscriptionId);
+          if (match.isNotEmpty) {
+            ownerId = match.first.ownerId;
+          }
+        }
+        
+        // If not found in active subscriptions, look in the current user's expired list
+        if (ownerId == null) {
+          final expiredSubs = ref.read(expiredSubscriptionsProvider).value;
+          if (expiredSubs != null) {
+            final match = expiredSubs.where((s) => s.id == subscriptionId);
+            if (match.isNotEmpty) {
+              ownerId = match.first.ownerId;
+            }
+          }
+        }
+
+        // If still not found, search in all household members' expired subscription lists
+        if (ownerId == null) {
+          final household = ref.read(householdProvider).value;
+          if (household != null) {
+            final members = household['members'] as List<dynamic>?;
+            if (members != null) {
+              for (final member in members) {
+                final memberId = member['id'] as int?;
+                if (memberId != null) {
+                  final expiredSubs = ref.read(memberExpiredSubscriptionsProvider(memberId)).value;
+                  if (expiredSubs != null) {
+                    final match = expiredSubs.where((s) => s.id == subscriptionId);
+                    if (match.isNotEmpty) {
+                      ownerId = memberId;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // Default fallback to currently logged-in user
+        if (ownerId == null) {
+          final currentUser = ref.read(userProvider).value;
+          ownerId = currentUser?.id;
+        }
+
+        final allHistory = await repo.getUserHistory(userId: ownerId, page: 0, size: 100);
         return allHistory.items.where((item) => item.subscriptionId == subscriptionId).toList();
       } catch (innerError) {
         rethrow;

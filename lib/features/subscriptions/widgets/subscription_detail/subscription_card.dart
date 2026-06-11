@@ -34,6 +34,7 @@ class SubscriptionCard extends StatelessWidget {
       isUpcoming: subscription.isUpcoming,
       daysUntilDue: subscription.daysUntilDue,
       isAutoPay: subscription.isAutoPay,
+      isDark: theme.brightness == Brightness.dark,
     );
     final String dueStatus = SubscriptionUIHelper.getDueStatus(
       isOverdue: subscription.isOverdue,
@@ -113,7 +114,7 @@ class SubscriptionCard extends StatelessWidget {
                           Text(
                             formatCurrency(subscription.amount, subscription.currency ?? currencySymbol),
                             style: textTheme.bodyLarge?.copyWith(
-                              color: colorScheme.primary,
+                              color: colorScheme.onSurface,
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
                             ),
