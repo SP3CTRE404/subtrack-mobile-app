@@ -157,6 +157,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       appBar: CustomAppBar(
         isScrolled: _isScrolled,
         title: titles[currentIndex],
+        showHistoryButton: currentIndex == 1,
         trailingAction: currentIndex == 1
             ? IconButton(
                 icon: const Icon(Icons.edit_note_rounded),

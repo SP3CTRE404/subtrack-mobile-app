@@ -14,6 +14,7 @@ import '../widgets/edit_subscription/end_subscription_dialog.dart';
 import '../../../../shared/widgets/destructive_action_dialog.dart';
 import '../../../../core/auth/auth_service.dart';
 import '../../../../shared/widgets/custom_toast.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class EditSubscriptionsScreen extends ConsumerStatefulWidget {
 
@@ -181,8 +182,81 @@ class _EditSubscriptionsScreenState extends ConsumerState<EditSubscriptionsScree
                 return matchesSearch && matchesUser;
               }).toList();
 
-              if (filteredSubs.isEmpty && _searchQuery.isNotEmpty) {
-                return const Center(child: Text('No subscriptions found.'));
+              if (filteredSubs.isEmpty) {
+                if (_searchQuery.isNotEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No matching subscriptions found.',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  );
+                }
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.cobaltBlue15,
+                            border: Border.all(
+                              color: AppColors.cobaltBlue30,
+                              width: 2,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.subscriptions_outlined,
+                            size: 38,
+                            color: AppColors.cobaltBlue,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'No Subscriptions to Manage',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Add a subscription first to manage, edit, or end your active billing plans.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(height: 1.4),
+                        ),
+                        const SizedBox(height: 32),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AddSubscriptionScreen(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.cobaltBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            elevation: 6,
+                          ),
+                          icon: const Icon(Icons.add_rounded),
+                          label: const Text(
+                            'Add Subscription',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
               }
 
               return RefreshIndicator(

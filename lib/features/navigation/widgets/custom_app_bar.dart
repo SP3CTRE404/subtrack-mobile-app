@@ -7,12 +7,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isScrolled;
   final String title;
   final Widget? trailingAction;
+  final bool showHistoryButton;
 
   const CustomAppBar({
     super.key,
     required this.isScrolled,
     required this.title,
     this.trailingAction,
+    this.showHistoryButton = false,
   });
 
   @override
@@ -74,46 +76,47 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 8.0),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                decoration: BoxDecoration(
-                  color: isScrolled
-                      ? (theme.brightness == Brightness.dark
-                            ? Colors.black.withValues(alpha: 0.3)
-                            : Colors.white.withValues(alpha: 0.72))
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
+        if (showHistoryButton)
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
                     color: isScrolled
                         ? (theme.brightness == Brightness.dark
-                              ? Colors.white.withValues(alpha: 0.12)
-                              : Colors.white.withValues(alpha: 0.7))
+                              ? Colors.black.withValues(alpha: 0.3)
+                              : Colors.white.withValues(alpha: 0.72))
                         : Colors.transparent,
-                    width: 1.2,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: isScrolled
+                          ? (theme.brightness == Brightness.dark
+                                ? Colors.white.withValues(alpha: 0.12)
+                                : Colors.white.withValues(alpha: 0.7))
+                          : Colors.transparent,
+                      width: 1.2,
+                    ),
                   ),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.history_rounded),
-                  tooltip: 'History',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PaymentHistoryScreen(),
-                      ),
-                    );
-                  },
+                  child: IconButton(
+                    icon: const Icon(Icons.history_rounded),
+                    tooltip: 'History',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PaymentHistoryScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
           ),
-        ),
         Padding(
           padding: const EdgeInsets.only(right: 16.0),
           child: ClipRRect(

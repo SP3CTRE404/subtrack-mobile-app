@@ -5,16 +5,23 @@ enum BillingCycle {
   custom,
   oneTime; // NEW
 
-  /// Convert from backend string (e.g. "MONTHLY") to enum.
-  static BillingCycle fromString(String value) {
-    if (value.toUpperCase() == 'ONE_TIME') return BillingCycle.oneTime;
+  static BillingCycle fromString(dynamic value) {
+    if (value == null) return BillingCycle.monthly;
+    if (value is num) {
+      final index = value.toInt();
+      if (index >= 0 && index < BillingCycle.values.length) {
+        return BillingCycle.values[index];
+      }
+      return BillingCycle.monthly;
+    }
+    final str = value.toString().toUpperCase();
+    if (str == 'ONE_TIME' || str == 'ONETIME' || str == '4') return BillingCycle.oneTime;
     return BillingCycle.values.firstWhere(
-      (e) => e.name.toUpperCase() == value.toUpperCase(),
+      (e) => e.name.toUpperCase() == str,
       orElse: () => BillingCycle.monthly,
     );
   }
 
-  /// Convert to backend string format
   String toJsonString() {
     if (this == BillingCycle.oneTime) return 'ONE_TIME';
     return name.toUpperCase();
@@ -68,28 +75,27 @@ class Subscription {
 
   factory Subscription.fromJson(Map<String, dynamic> json) {
     return Subscription(
-      id: json['id'] as int,
-      serviceName: json['serviceName'] as String,
-      amount: (json['amount'] as num).toDouble(),
-      billingCycle: BillingCycle.fromString(json['billingCycle'] as String),
-      customIntervalDays: json['customIntervalDays'] as int?,
-      customIntervalUnit: json['customIntervalUnit'] as String?,
-      nextBillingDate: json['nextBillingDate'] != null ? DateTime.parse(json['nextBillingDate'] as String) : null,
+      id: (json['id'] as num).toInt(),
+      serviceName: (json['serviceName'] ?? '') as String,
+      amount: (json['amount'] as num? ?? 0).toDouble(),
+      billingCycle: BillingCycle.fromString(json['billingCycle']),
+      customIntervalDays: (json['customIntervalDays'] as num?)?.toInt(),
+      customIntervalUnit: json['customIntervalUnit']?.toString(),
+      nextBillingDate: json['nextBillingDate'] != null ? DateTime.tryParse(json['nextBillingDate'].toString()) : null,
       purchaseDate: json['purchaseDate'] != null 
-          ? DateTime.parse(json['purchaseDate'] as String)
-          : (json['nextBillingDate'] != null ? DateTime.parse(json['nextBillingDate'] as String) : DateTime.now()), // Fallback
-      isAutoPay: json['isAutoPay'] as bool,
-      ownerName: json['ownerName'] as String?,
-      ownerId: json['ownerId'] as int?,
-      householdName: json['householdName'] as String?,
-      householdId: json['householdId'] as int?,
-      status: json['status'] as String? ?? 'ACTIVE',
-      isOverdue: json['isOverdue'] as bool? ?? false,
-      isUpcoming: json['isUpcoming'] as bool? ?? false,
-      daysUntilDue: json['daysUntilDue'] as int? ?? 0,
-      currency: json['currency'] as String?,
+          ? (DateTime.tryParse(json['purchaseDate'].toString()) ?? DateTime.now())
+          : (json['nextBillingDate'] != null ? (DateTime.tryParse(json['nextBillingDate'].toString()) ?? DateTime.now()) : DateTime.now()),
+      isAutoPay: json['isAutoPay'] == true || json['isAutoPay'] == 'true' || json['isAutoPay'] == 1,
+      ownerName: json['ownerName']?.toString(),
+      ownerId: (json['ownerId'] as num?)?.toInt(),
+      householdName: json['householdName']?.toString(),
+      householdId: (json['householdId'] as num?)?.toInt(),
+      status: json['status']?.toString() ?? 'ACTIVE',
+      isOverdue: json['isOverdue'] == true || json['isOverdue'] == 'true' || json['isOverdue'] == 1,
+      isUpcoming: json['isUpcoming'] == true || json['isUpcoming'] == 'true' || json['isUpcoming'] == 1,
+      daysUntilDue: (json['daysUntilDue'] as num? ?? 0).toInt(),
+      currency: json['currency']?.toString(),
     );
-
   }
 
 

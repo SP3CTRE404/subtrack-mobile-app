@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/auth_request.dart';
 import '../providers/auth_provider.dart';
+import '../services/auth_repository.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/auth_divider.dart';
@@ -32,25 +33,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       final request = LoginRequest(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-      ref.read(authProvider.notifier).login(request);
+      try {
+        await ref.read(authProvider.notifier).login(request);
+      } catch (e) {
+        if (mounted) {
+          final msg = e is AuthException ? e.message : 'Login failed. Please check your credentials.';
+          CustomToast.show(context: context, message: msg, isError: true);
+        }
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-
-    ref.listen<AuthStatus>(authProvider, (previous, next) {
-      if (next == AuthStatus.error) {
-        CustomToast.show(context: context, message: 'Login failed. Please check your credentials.', isError: false);
-      }
-    });
 
     return Scaffold(
       body: Stack(

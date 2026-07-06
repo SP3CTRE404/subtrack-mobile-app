@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../models/auth_request.dart';
 import '../providers/auth_provider.dart';
+import '../services/auth_repository.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/auth_divider.dart';
@@ -136,10 +137,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       if (_passwordController.text != _confirmPasswordController.text) {
         CustomToast.show(context: context, message: 'Passwords do not match', isError: true);
+        return;
+      }
+
+      final password = _passwordController.text;
+      if (password.length < 8 || !password.contains(RegExp(r'[A-Z]')) || !password.contains(RegExp(r'[^a-zA-Z0-9]'))) {
+        CustomToast.show(
+          context: context,
+          message: 'Password must be at least 8 chars, with 1 uppercase & 1 special char',
+          isError: true,
+        );
+        return;
+      }
+
+      if (_selectedDob == null) {
+        CustomToast.show(context: context, message: 'Please select your Date of Birth', isError: true);
         return;
       }
 
@@ -149,7 +165,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       }
 
       if (_createHousehold && _householdNameController.text.trim().isEmpty) {
-        CustomToast.show(context: context, message: 'Please enter a household name', isError: false);
+        CustomToast.show(context: context, message: 'Please enter a household name', isError: true);
         return;
       }
 
@@ -164,7 +180,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         country: _selectedCountry,
         currencySymbol: _selectedCurrency,
       );
-      ref.read(authProvider.notifier).register(request);
+      try {
+        await ref.read(authProvider.notifier).register(request);
+      } catch (e) {
+        if (mounted) {
+          final msg = e is AuthException ? e.message : 'Registration failed. Please try again.';
+          CustomToast.show(context: context, message: msg, isError: true);
+        }
+      }
     }
   }
 
@@ -184,12 +207,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final authState = ref.watch(authProvider);
     final age = _calculateAge(_selectedDob);
     final isMinor = _selectedDob != null && age < 18;
-
-    ref.listen<AuthStatus>(authProvider, (previous, next) {
-      if (next == AuthStatus.error) {
-        CustomToast.show(context: context, message: 'Registration failed. Please try again.', isError: false);
-      }
-    });
 
     return Scaffold(
       extendBodyBehindAppBar: true,

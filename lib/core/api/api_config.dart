@@ -3,6 +3,7 @@
 class ApiConfig {
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'https://subscription-manager-api-btqu.onrender.com',
+    // defaultValue: 'https://subscription-manager-api-btqu.onrender.com',
+    defaultValue: 'http://127.0.0.1:5232',
   );
 }
